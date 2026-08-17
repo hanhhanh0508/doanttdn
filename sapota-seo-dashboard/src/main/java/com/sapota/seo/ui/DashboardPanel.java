@@ -25,16 +25,32 @@ public class DashboardPanel extends JPanel {
     private DefaultTableModel tableModel;
     private JTable table;
     private JLabel lblSummary;
+    private PriorityChartPanel chartPanel;
 
     public DashboardPanel() {
         setLayout(new BorderLayout(8, 8));
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         add(buildFilterBar(), BorderLayout.NORTH);
-        add(buildTable(), BorderLayout.CENTER);
+        add(buildCenter(), BorderLayout.CENTER);
         add(buildBottomBar(), BorderLayout.SOUTH);
 
         loadData();
+    }
+
+    /**
+     * Khu vực trung tâm: bảng dữ liệu bên trái + biểu đồ trực quan bên phải
+     * (khu vực biểu đồ tương ứng Hình 4.4 trong wireframe báo cáo, mục 4.2.1).
+     */
+    private JSplitPane buildCenter() {
+        chartPanel = new PriorityChartPanel();
+
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
+                buildTable(), chartPanel);
+        splitPane.setResizeWeight(0.62); // ưu tiên không gian cho bảng
+        splitPane.setBorder(null);
+        splitPane.setDividerSize(6);
+        return splitPane;
     }
 
     private JPanel buildFilterBar() {
@@ -100,6 +116,7 @@ public class DashboardPanel extends JPanel {
             });
         }
         lblSummary.setText("Tổng số domain: " + list.size());
+        chartPanel.setData(list);
     }
 
     private void importExcel() {
