@@ -43,13 +43,6 @@
             <version>20240303</version>
         </dependency>
 
-        <!-- FlatLaf: giao diện Swing hiện đại (thay Look&Feel mặc định) -->
-        <dependency>
-            <groupId>com.formdev</groupId>
-            <artifactId>flatlaf</artifactId>
-            <version>3.4.1</version>
-        </dependency>
-
         <!-- Jakarta Mail (Angus): gửi email cảnh báo mất backlink qua SMTP -->
         <dependency>
             <groupId>org.eclipse.angus</groupId>

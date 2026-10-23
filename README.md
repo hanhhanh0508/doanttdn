@@ -144,9 +144,6 @@ Tab **Cài đặt → Kiểm tra backlink tự động & email cảnh báo**:
 - Lỗi truy cập (timeout/chặn bot) **không** bị coi là mất link, để tránh báo động giả.
 - Lưu ý: đây là app desktop nên lịch chỉ chạy **khi ứng dụng đang mở**.
 
-### Giao diện FlatLaf
-Giao diện Swing dùng thư viện **FlatLaf** (khai báo trong `pom.xml`, bật ở `Main.java`).
-
 ### Unit test (JUnit 5)
 ```bash
 mvn test

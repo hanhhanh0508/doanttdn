@@ -1,6 +1,5 @@
 package com.sapota.seo;
 
-import com.formdev.flatlaf.FlatLightLaf;
 import com.sapota.seo.db.DatabaseConnection;
 import com.sapota.seo.db.SchemaInitializer;
 import com.sapota.seo.model.User;
@@ -24,18 +23,11 @@ import javax.swing.*;
 public class Main {
 
     public static void main(String[] args) {
-        // FlatLaf: giao diện phẳng, hiện đại; nếu lỗi thì dùng giao diện hệ điều hành
+        // Dùng giao diện mặc định của hệ điều hành cho đẹp hơn Swing mặc định
         try {
-            UIManager.put("Button.arc", 8);
-            UIManager.put("Component.arc", 8);
-            UIManager.put("TextComponent.arc", 8);
-            FlatLightLaf.setup();
-        } catch (Exception e) {
-            try {
-                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-            } catch (Exception ignored) {
-                // dùng giao diện Swing mặc định
-            }
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception ignored) {
+            // Nếu không set được thì dùng giao diện Swing mặc định, không sao cả
         }
 
         SwingUtilities.invokeLater(() -> {
