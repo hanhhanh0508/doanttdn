@@ -4,6 +4,7 @@ import com.sapota.seo.dao.BacklinkDAO;
 import com.sapota.seo.dao.GapDomainDAO;
 import com.sapota.seo.model.BacklinkDomain;
 import com.sapota.seo.model.GapDomain;
+import com.sapota.seo.util.ExcelColumns;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
@@ -14,6 +15,8 @@ import org.apache.poi.ss.usermodel.WorkbookFactory;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Service đọc dữ liệu từ 2 file Excel đầu vào (mô tả tại mục 4.3.4 báo cáo)
@@ -39,14 +42,25 @@ public class ExcelImportService {
             Sheet sheet = wb.getSheetAt(0);
             backlinkDAO.deleteAll();
 
+            // Tìm cột theo tên tiêu đề: file xuất từ Semrush có cột "IP Address" xen trước "Country",
+            // nên đọc cố định cột số 4 sẽ lấy nhầm địa chỉ IP làm quốc gia.
+            List<String> headers = new ArrayList<>();
+            Row headerRow = sheet.getRow(0);
+            if (headerRow != null) {
+                for (int c = 0; c < headerRow.getLastCellNum(); c++) headers.add(getString(headerRow.getCell(c)));
+            }
+            int colBacklinks = ExcelColumns.find(headers, "Backlinks", 2);
+            int colCountry = ExcelColumns.find(headers, "Country", 3);
+
             for (int r = 1; r <= sheet.getLastRowNum(); r++) {
                 Row row = sheet.getRow(r);
                 if (row == null || isRowEmpty(row)) continue;
 
                 int ascore = (int) getNumeric(row.getCell(0));
                 String domain = getString(row.getCell(1));
-                int backlinks = (int) getNumeric(row.getCell(2));
-                String country = getString(row.getCell(3));
+                int backlinks = (int) getNumeric(row.getCell(colBacklinks));
+                String country = getString(row.getCell(colCountry)).toUpperCase();
+                if (country.length() > 10) country = country.substring(0, 10); // cột country trong DB dài tối đa 10 ký tự
 
                 if (domain.isEmpty()) continue;
 
