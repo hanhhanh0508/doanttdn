@@ -53,6 +53,62 @@ public final class AppSettings {
         }
     }
 
+    // ---- Cấu hình kiểm tra tự động & email cảnh báo ----
+
+    public static synchronized boolean isScheduleEnabled() {
+        return Boolean.parseBoolean(PROPS.getProperty("schedule.enabled", "false"));
+    }
+
+    /** Giờ chạy kiểm tra hằng ngày, dạng HH:mm (mặc định 08:00). */
+    public static synchronized String getScheduleTime() {
+        return PROPS.getProperty("schedule.time", "08:00").trim();
+    }
+
+    public static synchronized boolean isEmailEnabled() {
+        return Boolean.parseBoolean(PROPS.getProperty("email.enabled", "false"));
+    }
+
+    public static synchronized String getSmtpHost() {
+        return PROPS.getProperty("smtp.host", "smtp.gmail.com").trim();
+    }
+
+    public static synchronized int getSmtpPort() {
+        try {
+            return Integer.parseInt(PROPS.getProperty("smtp.port", "587").trim());
+        } catch (NumberFormatException e) {
+            return 587;
+        }
+    }
+
+    public static synchronized String getSmtpUser() {
+        return PROPS.getProperty("smtp.user", "").trim();
+    }
+
+    public static synchronized String getSmtpPassword() {
+        return PROPS.getProperty("smtp.password", "");
+    }
+
+    public static synchronized String getEmailTo() {
+        return PROPS.getProperty("email.to", "").trim();
+    }
+
+    public static synchronized void saveSchedule(boolean scheduleEnabled, String time, boolean emailEnabled,
+                                                 String host, int port, String user, String password,
+                                                 String emailTo) throws IOException {
+        PROPS.setProperty("schedule.enabled", String.valueOf(scheduleEnabled));
+        PROPS.setProperty("schedule.time", time == null ? "08:00" : time.trim());
+        PROPS.setProperty("email.enabled", String.valueOf(emailEnabled));
+        PROPS.setProperty("smtp.host", host == null ? "" : host.trim());
+        PROPS.setProperty("smtp.port", String.valueOf(port));
+        PROPS.setProperty("smtp.user", user == null ? "" : user.trim());
+        PROPS.setProperty("smtp.password", password == null ? "" : password);
+        PROPS.setProperty("email.to", emailTo == null ? "" : emailTo.trim());
+        Files.createDirectories(DIR);
+        try (OutputStream out = Files.newOutputStream(FILE)) {
+            PROPS.store(out, "SapotaCorp SEO Dashboard settings");
+        }
+    }
+
     private static double getDouble(String key, double def) {
         try {
             return Double.parseDouble(PROPS.getProperty(key, String.valueOf(def)));

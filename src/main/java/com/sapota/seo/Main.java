@@ -1,8 +1,13 @@
 package com.sapota.seo;
 
+import com.formdev.flatlaf.FlatLightLaf;
 import com.sapota.seo.db.DatabaseConnection;
 import com.sapota.seo.db.SchemaInitializer;
+import com.sapota.seo.model.User;
+import com.sapota.seo.service.SchedulerService;
+import com.sapota.seo.ui.LoginDialog;
 import com.sapota.seo.ui.MainFrame;
+import com.sapota.seo.util.Session;
 
 import javax.swing.*;
 
@@ -12,17 +17,25 @@ import javax.swing.*;
  * Trước khi chạy, cần:
  *  1. Bật MySQL (qua XAMPP Control Panel hoặc MySQL Server).
  *  2. Import file sql/schema.sql để tạo database "sapota_seo".
- *  3. Kiểm tra lại thông tin kết nối trong DatabaseConnection.java
- *     (mặc định: user=root, password="", phù hợp XAMPP).
+ *  3. Kiểm tra lại thông tin kết nối trong DatabaseConnection.java.
+ *
+ * Lần đầu chạy app tự tạo tài khoản quản trị: admin / admin123 (hãy đổi mật khẩu sau khi đăng nhập).
  */
 public class Main {
 
     public static void main(String[] args) {
-        // Dùng giao diện mặc định của hệ điều hành cho đẹp hơn Swing mặc định
+        // FlatLaf: giao diện phẳng, hiện đại; nếu lỗi thì dùng giao diện hệ điều hành
         try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception ignored) {
-            // Nếu không set được thì dùng giao diện Swing mặc định, không sao cả
+            UIManager.put("Button.arc", 8);
+            UIManager.put("Component.arc", 8);
+            UIManager.put("TextComponent.arc", 8);
+            FlatLightLaf.setup();
+        } catch (Exception e) {
+            try {
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            } catch (Exception ignored) {
+                // dùng giao diện Swing mặc định
+            }
         }
 
         SwingUtilities.invokeLater(() -> {
@@ -39,15 +52,33 @@ public class Main {
             }
 
             try {
-                SchemaInitializer.init(); // tự tạo bảng outreach, tracked_links nếu chưa có
+                SchemaInitializer.init(); // tự tạo bảng outreach, tracked_links, users nếu chưa có
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(null, "Không khởi tạo được các bảng bổ sung: " + ex.getMessage(),
                         "Lỗi Database", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
-            MainFrame frame = new MainFrame();
-            frame.setVisible(true);
+            SchedulerService.getInstance().restartFromSettings(); // bật lịch kiểm tra tự động nếu đã cấu hình
+            showLoginThenMain();
         });
+    }
+
+    /** Hiện đăng nhập; đăng nhập xong mở cửa sổ chính. Đăng xuất thì quay lại màn hình đăng nhập. */
+    private static void showLoginThenMain() {
+        User user = LoginDialog.showLogin();
+        if (user == null) {
+            System.exit(0); // người dùng bấm Thoát / đóng hộp thoại
+            return;
+        }
+        MainFrame[] holder = new MainFrame[1];
+        holder[0] = new MainFrame(() -> {
+            MainFrame old = holder[0];
+            Session.logout();
+            old.setVisible(false);   // ẩn trước, đóng hẳn sau khi đăng nhập lại để JVM không tự thoát giữa chừng
+            showLoginThenMain();
+            old.dispose();
+        });
+        holder[0].setVisible(true);
     }
 }

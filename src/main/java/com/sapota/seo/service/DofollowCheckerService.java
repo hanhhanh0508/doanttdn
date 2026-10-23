@@ -56,25 +56,7 @@ public class DofollowCheckerService {
                     .followRedirects(true)
                     .get();
 
-            Elements links = doc.select("a[href*=" + targetDomain + "]");
-
-            if (links.isEmpty()) {
-                return new CheckResult(url, CheckResult.STATUS_NOT_FOUND,
-                        "Không tìm thấy liên kết trỏ về " + targetDomain + " trên trang này");
-            }
-
-            // Nếu có nhiều liên kết, chỉ cần 1 liên kết dofollow là coi như trang này dofollow
-            for (Element link : links) {
-                String rel = link.attr("rel").toLowerCase();
-                boolean isNofollow = rel.contains("nofollow");
-                if (!isNofollow) {
-                    return new CheckResult(url, CheckResult.STATUS_DOFOLLOW,
-                            "Tìm thấy " + links.size() + " liên kết, có ít nhất 1 liên kết dofollow");
-                }
-            }
-
-            return new CheckResult(url, CheckResult.STATUS_NOFOLLOW,
-                    "Tìm thấy " + links.size() + " liên kết, tất cả đều gắn rel=nofollow");
+            return classify(url, doc, targetDomain);
 
         } catch (IOException e) {
             return new CheckResult(url, CheckResult.STATUS_ERROR,
@@ -82,6 +64,31 @@ public class DofollowCheckerService {
         } catch (Exception e) {
             return new CheckResult(url, CheckResult.STATUS_ERROR, "Lỗi không xác định: " + e.getMessage());
         }
+    }
+
+    /**
+     * Phần phân tích thuần (không dùng mạng): tìm thẻ <a> trỏ về targetDomain trong tài liệu HTML
+     * và xác định Dofollow/Nofollow/Không tìm thấy. Tách riêng để unit test bằng HTML mẫu.
+     */
+    public static CheckResult classify(String url, Document doc, String targetDomain) {
+        Elements links = doc.select("a[href*=" + targetDomain + "]");
+
+        if (links.isEmpty()) {
+            return new CheckResult(url, CheckResult.STATUS_NOT_FOUND,
+                    "Không tìm thấy liên kết trỏ về " + targetDomain + " trên trang này");
+        }
+
+        // Nếu có nhiều liên kết, chỉ cần 1 liên kết dofollow là coi như trang này dofollow
+        for (Element link : links) {
+            String rel = link.attr("rel").toLowerCase();
+            if (!rel.contains("nofollow")) {
+                return new CheckResult(url, CheckResult.STATUS_DOFOLLOW,
+                        "Tìm thấy " + links.size() + " liên kết, có ít nhất 1 liên kết dofollow");
+            }
+        }
+
+        return new CheckResult(url, CheckResult.STATUS_NOFOLLOW,
+                "Tìm thấy " + links.size() + " liên kết, tất cả đều gắn rel=nofollow");
     }
 
     /**

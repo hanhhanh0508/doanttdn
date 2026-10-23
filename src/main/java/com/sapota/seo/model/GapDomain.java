@@ -75,18 +75,29 @@ public class GapDomain {
     /**
      * Công thức tính điểm ưu tiên: kết hợp AS cao nhất và số lượng đối thủ
      * đang sở hữu backlink từ domain này (mô tả tại mục 4.3.4 báo cáo).
-     * Có thể điều chỉnh trọng số (1.0 và 5.0) tuỳ nhu cầu thực tế.
+     * Trọng số lấy từ tab Cài đặt (mặc định AS x 1.0 + số đối thủ x 5.0).
      */
     public static double calculatePriorityScore(int maxAs, int competitorCount) {
-        return (maxAs * com.sapota.seo.util.AppSettings.getWeightAs())
-                + (competitorCount * com.sapota.seo.util.AppSettings.getWeightCompetitor());
+        return calculatePriorityScore(maxAs, competitorCount,
+                com.sapota.seo.util.AppSettings.getWeightAs(),
+                com.sapota.seo.util.AppSettings.getWeightCompetitor());
+    }
+
+    /** Phiên bản thuần (không đọc file cấu hình) để dễ kiểm thử bằng unit test. */
+    public static double calculatePriorityScore(int maxAs, int competitorCount,
+                                                double weightAs, double weightCompetitor) {
+        return (maxAs * weightAs) + (competitorCount * weightCompetitor);
     }
 
     /** Phân mức ưu tiên theo điểm: Rất cao (>=100), Cao (>=80), Trung bình (>=60), còn lại Thấp. */
-    public String getPriorityLevel() {
-        if (priorityScore >= 100) return "Rất cao";
-        if (priorityScore >= 80) return "Cao";
-        if (priorityScore >= 60) return "Trung bình";
+    public static String levelFor(double score) {
+        if (score >= 100) return "Rất cao";
+        if (score >= 80) return "Cao";
+        if (score >= 60) return "Trung bình";
         return "Thấp";
+    }
+
+    public String getPriorityLevel() {
+        return levelFor(priorityScore);
     }
 }

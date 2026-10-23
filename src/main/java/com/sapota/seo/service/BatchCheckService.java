@@ -4,6 +4,7 @@ import com.sapota.seo.model.CheckResult;
 
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.function.Function;
 
 /** Kiểm tra dofollow nhiều URL song song bằng thread pool (nhanh hơn kiểm tra tuần tự). */
 public final class BatchCheckService {
@@ -18,12 +19,17 @@ public final class BatchCheckService {
 
     public static void checkAll(List<String> urls, String targetDomain, int threads, Listener listener) {
         DofollowCheckerService service = new DofollowCheckerService(targetDomain);
+        checkAll(urls, service::check, threads, listener);
+    }
+
+    /** Bản tổng quát: nhận hàm kiểm tra bất kỳ (dùng cho unit test, không cần gọi mạng thật). */
+    public static void checkAll(List<String> urls, Function<String, CheckResult> checker, int threads, Listener listener) {
         ExecutorService pool = Executors.newFixedThreadPool(Math.max(1, threads));
         CompletionService<Object[]> cs = new ExecutorCompletionService<>(pool);
         try {
             for (int i = 0; i < urls.size(); i++) {
                 final int idx = i;
-                cs.submit(() -> new Object[]{idx, service.check(urls.get(idx))});
+                cs.submit(() -> new Object[]{idx, checker.apply(urls.get(idx))});
             }
             for (int done = 1; done <= urls.size(); done++) {
                 try {

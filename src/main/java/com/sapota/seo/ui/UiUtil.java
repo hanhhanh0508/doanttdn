@@ -6,12 +6,15 @@ import java.awt.Desktop;
 import java.net.URI;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.ResolverStyle;
 import java.time.format.DateTimeParseException;
 
 /** Các hàm tiện ích dùng chung cho giao diện. */
 public final class UiUtil {
 
-    public static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    /** STRICT + "uuuu": ngày không tồn tại (vd 31/02/2026) bị từ chối thay vì tự đổi thành 28/02. */
+    public static final DateTimeFormatter DATE_FMT =
+            DateTimeFormatter.ofPattern("dd/MM/uuuu").withResolverStyle(ResolverStyle.STRICT);
 
     private UiUtil() {
     }

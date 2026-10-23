@@ -85,6 +85,23 @@ CREATE TABLE tracked_links (
 );
 
 -- ---------------------------------------------------------------------
+-- Bảng 4.7: Người dùng - đăng nhập & phân quyền (ADMIN / STAFF)
+-- App tự tạo bảng này và tài khoản admin / admin123 ở lần chạy đầu tiên
+-- (mật khẩu lưu dạng hash PBKDF2, không lưu bản rõ).
+-- ---------------------------------------------------------------------
+DROP TABLE IF EXISTS users;
+CREATE TABLE users (
+    id             INT AUTO_INCREMENT PRIMARY KEY,
+    username       VARCHAR(50)  NOT NULL,
+    password_hash  VARCHAR(255) NOT NULL,
+    full_name      VARCHAR(100),
+    role           VARCHAR(20)  NOT NULL DEFAULT 'STAFF',   -- ADMIN / STAFF
+    active         TINYINT(1)   NOT NULL DEFAULT 1,
+    created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_users_username (username)
+);
+
+-- ---------------------------------------------------------------------
 -- Dữ liệu mẫu (trích từ dữ liệu thực tế trong báo cáo) để test nhanh
 -- Có thể xoá phần này và import dữ liệu thật bằng chức năng
 -- "Nhập dữ liệu từ Excel" trong ứng dụng.

@@ -64,6 +64,7 @@ java -jar target/sapota-seo-dashboard.jar
 sapota-seo-dashboard/
 ├── pom.xml                     # Cấu hình Maven (Jsoup, POI, MySQL Connector)
 ├── sql/schema.sql              # Script tạo database + bảng + dữ liệu mẫu
+├── src/test/java/              # Unit test JUnit 5 (mvn test)
 ├── sample-data/                # Chỗ để copy 2 file Excel backlink thật vào
 └── src/main/java/com/sapota/seo/   (các file mới: ui/{Stats,Backlink,Outreach,Monitor,History,Settings}Panel,
     #   ui/SimpleChartPanel, service/{Stats,Report,BatchCheck}Service, dao/{Outreach,TrackedLink}DAO,
@@ -121,7 +122,40 @@ sapota-seo-dashboard/
 > Hai bảng mới (`outreach`, `tracked_links`) được app **tự tạo** khi khởi động nếu chưa có,
 > nên không cần import lại `schema.sql` nếu đã có database cũ.
 
-## 8. Ghi chú
+## 8. Đăng nhập, phân quyền, kiểm tra tự động, unit test (phiên bản 3.0)
+
+### Đăng nhập & phân quyền
+- Lần chạy đầu app tự tạo tài khoản quản trị **`admin` / `admin123`** → đăng nhập xong hãy vào tab **Người dùng**
+  → **Đổi mật khẩu của tôi**.
+- Mật khẩu được băm bằng **PBKDF2-HMAC-SHA256** (120.000 vòng, salt ngẫu nhiên mỗi tài khoản), không lưu bản rõ.
+- Hai vai trò: **Quản trị viên (ADMIN)** thấy toàn bộ 10 tab; **Nhân viên (STAFF)** chỉ thấy 8 tab nghiệp vụ SEO,
+  không thấy **Cài đặt** và **Người dùng**.
+- Tab **Người dùng** (chỉ admin): thêm tài khoản, đặt lại mật khẩu, đổi vai trò, khoá/mở khoá, xoá.
+  App không cho tự khoá/xoá chính mình hoặc làm mất quản trị viên cuối cùng. Đăng nhập sai 5 lần thì đóng app.
+
+### Kiểm tra backlink tự động + email cảnh báo
+Tab **Cài đặt → Kiểm tra backlink tự động & email cảnh báo**:
+1. Tick *Tự động kiểm tra backlink mỗi ngày*, nhập giờ chạy (HH:mm, mặc định 08:00).
+2. Tick *Gửi email...* rồi điền SMTP (Gmail: `smtp.gmail.com`, cổng `587`; cần bật xác minh 2 bước và tạo
+   **Mật khẩu ứng dụng** tại https://myaccount.google.com/apppasswords).
+3. Bấm **Gửi email thử** để kiểm tra cấu hình, **Chạy kiểm tra ngay** để chạy 1 lượt thủ công.
+- Mỗi lượt: kiểm tra song song 5 luồng tất cả link trong Backlink Monitor → cập nhật trạng thái + lưu lịch sử →
+  nếu có link **từng Dofollow nhưng nay mất/đổi** thì gửi 1 email liệt kê các link đó (không báo lặp ở lượt sau).
+- Lỗi truy cập (timeout/chặn bot) **không** bị coi là mất link, để tránh báo động giả.
+- Lưu ý: đây là app desktop nên lịch chỉ chạy **khi ứng dụng đang mở**.
+
+### Giao diện FlatLaf
+Giao diện Swing dùng thư viện **FlatLaf** (khai báo trong `pom.xml`, bật ở `Main.java`).
+
+### Unit test (JUnit 5)
+```bash
+mvn test
+```
+63 test trong `src/test/java/...`, **không cần MySQL hay Internet**: công thức điểm ưu tiên và các mức,
+phân loại Dofollow/Nofollow bằng HTML mẫu, kiểm tra song song (đủ URL, nhiều luồng, 1 URL lỗi không dừng cả batch),
+quy tắc mất link, soạn email cảnh báo, tính giờ chạy kế tiếp của lịch, băm mật khẩu, phân tích ngày/domain.
+
+## 9. Ghi chú
 
 - Mặc định module Dofollow Checker tìm liên kết trỏ về `sapotacorp.vn`. Muốn đổi
   domain đích khác, chỉnh tham số trong `DofollowCheckerService` (constructor
